@@ -23,19 +23,96 @@ add amount if type = d
 subtract ammount if type = c 
 
 if varible == 0 Contine
- 
+
+--**Miguel Stuff**
+    v_accTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE;
+    v_accBalTemp ACCOUNT.Account_balance%TYPE;
+
+    v_accTransNoTemp := 0;
+    v_accBalTemp := 0;
+
+    IF (v_accTransNoTemp != rec_transData.Transaction_no) THEN
+        v_accTransNoTemp := rec_transData.Transaction_no;
+        v_accBalTemp := 0;
+
+    ELSE
+        IF (rec_transData.Transaction_type = k_tDebit) THEN
+            v_accBalTemp := v_accBalTemp + rec_transData.Transaction_amount;
+
+        ELSIF (rec_transData.Transaction_type = k_tDebit) THEN
+            v_accBalTemp := v_accBalTemp - rec_transData.Transaction_amount;
+
+        ELSE NULL;
+
+        END IF;
+
+    END IF;
+
+--==EXCEPTIONS==--
+ex_invalidAccNum_update EXCEPTION;
+ex_nVal_update EXCEPTION;
+ex_invalidTransType_update EXCEPTION;
+ex_missingTransNum_update EXCEPTION;
 
 --Invalid account #
 Check if account # exists 
 
+--**Miguel Stuff**
+IF SQL%NOTFOUND THEN
+    RAISE ex_invalidAccNum_update;
+END IF;
+
+EXCEPTION
+
+WHEN ex_invalidAccNum_update THEN
+    RAISE_APPLICATION_ERROR(-20031, 'Account # does not exist');
+
+END;
+
 --Negative values given for transaction 
 Check if any values are negative
+
+--**Miguel Stuff**
+IF (rec_transData.Transaction_amount < 0) THEN
+    RAISE ex_nVal_update;
+END IF;
+
+EXCEPTION
+
+WHEN ex_nVal_update THEN
+    RAISE_APPLICATION_ERROR(-20032, 'Negative values are invalid');
+
+END;
 
 --Invalid transcation type
 Compare to make sure it D or C
 
+--**Miguel Stuff**
+IF (rec_transData.Transaction_type = 'D' OR rec_transData.Transaction_type = 'C') THEN
+    RAISE ex_invalidTransType_update;
+END IF;
+
+EXCEPTION
+
+WHEN ex_invalidTransType_update THEN
+    RAISE_APPLICATION_ERROR(-20033, 'Invalid trasaction type');
+
+END;
+
 --missin transaction number
 if Transaction number is null
+
+--**Miguel Stuff**
+IF (rec_transData.Transaction_no IS NULL) THEN
+    RAISE ex_missingTransNum_update;
+END IF;
+
+EXCEPTION
+
+WHEN ex_missingTransNum_update THEN
+    RAISE_APPLICATION_ERROR(-20034, 'Missing transaction number');
+
+END;
 
 --Get defaut transaction type from row
 --Match account_no.new_transactions to account_no.accunt
@@ -47,7 +124,7 @@ if they are the same add amount to account
 if they are diffrent subtract amount from account 
 
 
---Add to transaction_detail and transaction_hisotory
+--Add to transaction_detail and transaction_history
 
 --Delete transaction from new_transactions table 
 
