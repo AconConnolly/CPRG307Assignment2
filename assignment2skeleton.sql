@@ -168,21 +168,28 @@ if they are diffrent subtract amount from account
 --**Miguel Stuff**
 Make New stuff
 
+-- TRANSACTION_DETAIL
 FOR rec_transData IN cur_transData LOOP
         
-    INSERT INTO transaction_detail
+    INSERT INTO TRANSACTION_DETAIL
     VALUES(Account_no, Transaction_no, Transaction_type, Transaction_amount);
 
 END LOOP;
 
+-- TRANSACTION_HISTORY
+FOR rec_transData IN cur_transData LOOP
+        
+    INSERT INTO TRANSACTION_HISTORY
+    VALUES(Transaction_no, Transaction_date, Description);
+
+END LOOP;
 
 --Delete transaction from new_transactions table 
 
 --**Miguel Stuff**
 Delete Stuff
 
-
-
+DELETE FROM NEW_TRANSACTIONS;
 
 --Finding Acc Type
 
