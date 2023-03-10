@@ -25,14 +25,14 @@ subtract ammount if type = c
 if varible == 0 Contine
 
 --**Miguel Stuff**
-    v_accTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE;
+    v_newTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE;
     v_accBalTemp ACCOUNT.Account_balance%TYPE;
 
-    v_accTransNoTemp := 0;
+    v_newTransNoTemp := 0;
     v_accBalTemp := 0;
 
-    IF (v_accTransNoTemp != rec_transData.Transaction_no) THEN
-        v_accTransNoTemp := rec_transData.Transaction_no;
+    IF (v_newTransNoTemp != rec_transData.Transaction_no) THEN
+        v_newTransNoTemp := rec_transData.Transaction_no;
         v_accBalTemp := 0;
 
     ELSE
@@ -43,10 +43,15 @@ if varible == 0 Contine
             v_accBalTemp := v_accBalTemp - rec_transData.Transaction_amount;
 
         ELSE NULL;
-
         END IF;
 
     END IF;
+
+    /*
+    UPDATE ACCOUNT
+    SET Account_balance = v_accBalTemp
+    WHERE 
+    */
 
 --==EXCEPTIONS==--
 ex_invalidAccNum_update EXCEPTION;
@@ -123,10 +128,58 @@ END;
 if they are the same add amount to account 
 if they are diffrent subtract amount from account 
 
+--**Miguel Stuff**
+    v_newTransTypeTemp NEW_TRANSACTIONS.Transaction_type%TYPE;
+    v_newAccNoTemp NEW_TRANSACTIONS.Account_no%TYPE;
+    v_accTypeCodeTemp ACCOUNT_TYPE.Account_type_code%TYPE;
+    v_accBalTemp ACCOUNT.Account_balance%TYPE;
+
+    v_newTransTypeTemp := '';
+    v_newAccNoTemp := 0;
+    v_accTypeCodeTemp := '';
+    v_accBalTemp := 0;
+
+    FOR rec_transData IN cur_transData LOOP
+        v_newTransTypeTemp := rec_transData.Transaction_type;
+        v_newAccNoTemp := rec_transData.Account_no;
+
+        SELECT Default_trans_type
+        FROM ACCOUNT_TYPE
+        JOIN ACCOUNT USING (ACCOUNT_TYPE_CODE)
+        WHERE Account_no = v_newAccNoTemp;
+
+        IF (v_newTransTypeTemp = Default_trans_type) THEN
+            v_accBalTemp := v_accBalTemp + rec_transData.Transaction_amount;
+        ELSIF (v_newTransTypeTemp != Default_trans_type) THEN
+            v_accBalTemp := v_accBalTemp - rec_transData.Transaction_amount;
+        ELSE NULL;
+        END IF;
+
+        /*
+        UPDATE ACCOUNT
+        SET Account_balance = v_accBalTemp
+        WHERE 
+        */
+
+    END LOOP;
 
 --Add to transaction_detail and transaction_history
 
+--**Miguel Stuff**
+Make New stuff
+
+FOR rec_transData IN cur_transData LOOP
+        
+    INSERT INTO transaction_detail
+    VALUES(Account_no, Transaction_no, Transaction_type, Transaction_amount);
+
+END LOOP;
+
+
 --Delete transaction from new_transactions table 
+
+--**Miguel Stuff**
+Delete Stuff
 
 
 
