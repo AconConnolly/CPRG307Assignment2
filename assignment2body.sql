@@ -28,6 +28,11 @@ DECLARE
     v_accBal ACCOUNT.Account_balance%TYPE;
 */
 
+
+--Account Type Variables (For Ease)
+    v_atCode ACCOUNT_TYPE.Account_type_code%TYPE;
+    v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE;
+
 --For Calculations
     v_accBal ACCOUNT.Account_balance%TYPE;
 
@@ -47,17 +52,29 @@ BEGIN
 
         v_accCount := 0;--Test**
 
+        /*
+        SELECT Default_trans_type
+        INTO v_atDefTransType
+        FROM ACCOUNT_TYPE
+        WHERE Account_type_code = rec_accData.Account_no;
+        */
+
         FOR rec_ntData IN cur_ntData LOOP
 
+            SELECT Default_trans_type
+            INTO v_atDefTransType
+            FROM ACCOUNT_TYPE
+            WHERE Account_type_code = rec_accData.Account_type_code;
+            
             /*
             --==Error Check 
             IF SQL%NOTFOUND THEN --Invalid Account #
                 RAISE ex_invalidAccNum_update;
-            ELSIF (rec_transData.Transaction_amount < 0) THEN --Negative Values
+            ELSIF (rec_ntData.Transaction_amount < 0) THEN --Negative Values
                 RAISE ex_nVal_update;
-            ELSIF (rec_transData.Transaction_type = 'D' OR rec_transData.Transaction_type = 'C') THEN --Invalid Transaction Type
+            ELSIF (rec_ntData.Transaction_type = 'D' OR rec_transData.Transaction_type = 'C') THEN --Invalid Transaction Type
                 RAISE ex_invalidTransType_update;
-            ELSIF (rec_transData.Transaction_no IS NULL) THEN --Missing Transaction Number
+            ELSIF (rec_ntData.Transaction_no IS NULL) THEN --Missing Transaction Number
                 RAISE ex_missingTransNum_update;
             ELSE NULL;
             END IF;
@@ -81,6 +98,7 @@ BEGIN
         --**TEST**
         DBMS_OUTPUT.PUT_LINE(rec_accData.Account_no);
         DBMS_OUTPUT.PUT_LINE(v_accCount);
+        DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
         DBMS_OUTPUT.PUT_LINE(v_accBal);
         
     END LOOP;
