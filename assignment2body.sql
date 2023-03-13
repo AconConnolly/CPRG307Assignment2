@@ -43,12 +43,29 @@ BEGIN
 
         FOR rec_ntData IN cur_ntData LOOP
 
+            /*
+            --Error Check
+            IF SQL%NOTFOUND THEN
+                RAISE ex_invalidAccNum_update;
+            ELSE
+            */
+
+            --Calculations
+
+            --Check if Equal
+
+            --**TEST**
             IF (rec_ntData.Account_no = rec_accData.Account_no) THEN
                 v_accCount := v_accCount + 1;
             END IF;
 
         END LOOP;
 
+        --Update Transaction Detail
+
+        --Update Transaction History
+
+        --**TEST**
         DBMS_OUTPUT.PUT_LINE(rec_accData.Account_no);
         DBMS_OUTPUT.PUT_LINE(v_accCount);
         
