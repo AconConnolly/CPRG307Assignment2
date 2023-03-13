@@ -28,9 +28,8 @@ DECLARE
     v_accBal ACCOUNT.Account_balance%TYPE;
 */
 
-
 --Account Type Variables (For Ease)
-    v_atCode ACCOUNT_TYPE.Account_type_code%TYPE;
+    --v_atCode ACCOUNT_TYPE.Account_type_code%TYPE;
     v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE;
 
 --For Calculations
@@ -51,13 +50,6 @@ BEGIN
         v_accBal := 0;
 
         v_accCount := 0;--Test**
-
-        /*
-        SELECT Default_trans_type
-        INTO v_atDefTransType
-        FROM ACCOUNT_TYPE
-        WHERE Account_type_code = rec_accData.Account_no;
-        */
 
         FOR rec_ntData IN cur_ntData LOOP
 
@@ -101,9 +93,15 @@ BEGIN
 
         --==Check if Equal
 
+        /*
         --==Update Transaction Detail
+        INSERT INTO TRANSACTION_DETAIL
+        VALUES(Account_no, Transaction_no, Transaction_type, Transaction_amount);
 
         --==Update Transaction History
+        INSERT INTO TRANSACTION_HISTORY
+        VALUES(Transaction_no, Transaction_date, Description);
+        */
 
         --**TEST**
         DBMS_OUTPUT.PUT_LINE('-----------');
