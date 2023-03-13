@@ -65,7 +65,7 @@ BEGIN
             INTO v_atDefTransType
             FROM ACCOUNT_TYPE
             WHERE Account_type_code = rec_accData.Account_type_code;
-            
+
             /*
             --==Error Check 
             IF SQL%NOTFOUND THEN --Invalid Account #
@@ -81,8 +81,16 @@ BEGIN
             */
 
             --==Calculations
+            IF (rec_ntData.Account_no = rec_accData.Account_no) THEN
+                CASE
+                    WHEN (v_atDefTransType = rec_ntData.Transaction_type) THEN
+                        v_accBal := v_accBal + rec_ntData.Transaction_amount;
+                    WHEN (v_atDefTransType != rec_ntData.Transaction_type) THEN
+                        v_accBal := v_accBal - rec_ntData.Transaction_amount;
+                    ELSE NULL;
+                END CASE;
 
-            --==Check if Equal
+            END IF;
 
             --**TEST**
             IF (rec_ntData.Account_no = rec_accData.Account_no) THEN
@@ -91,11 +99,14 @@ BEGIN
 
         END LOOP;
 
+        --==Check if Equal
+
         --==Update Transaction Detail
 
         --==Update Transaction History
 
         --**TEST**
+        DBMS_OUTPUT.PUT_LINE('-----------');
         DBMS_OUTPUT.PUT_LINE(rec_accData.Account_no);
         DBMS_OUTPUT.PUT_LINE(v_accCount);
         DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
