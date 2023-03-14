@@ -68,8 +68,8 @@ BEGIN
         IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
             v_ntTransNoTemp := rec_ntData.Transaction_no;
             v_ntCount := 0;--Test**
-            DBMS_OUTPUT.PUT_LINE('-----------');--Test**
-            DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);--Test*
+            --DBMS_OUTPUT.PUT_LINE('-----------');--Test**
+            --DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);--Test*
         ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
         
         
@@ -89,10 +89,12 @@ BEGIN
                         v_accBal := v_accBal + v_ntTransAmount;
                     WHEN (v_atDefTransType != rec_ntData.Transaction_type) THEN
                         v_accBal := v_accBal - v_ntTransAmount;
+                        
                     ELSE NULL;
                 END CASE;
 
             END IF;
+
 
             /*
             --**TEST** For Account Num Count
@@ -107,6 +109,10 @@ BEGIN
         
         ELSE NULL;
         END IF;
+
+        UPDATE ACCOUNT
+        SET Account_balance = v_accBal
+        WHERE v_ntAccNo = v_accAccNo;
 
         --==Check if Equal
 
@@ -123,17 +129,13 @@ BEGIN
         DELETE FROM NEW_TRANSACTIONS
         WHERE Transaction_no = v_ntTransNoTemp;
         */
-
-        /*
+        
         --**TEST** For Balance Calculations
         DBMS_OUTPUT.PUT_LINE('-----------');
         DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
-        DBMS_OUTPUT.PUT_LINE(rec_accData.Account_no);
-        DBMS_OUTPUT.PUT_LINE(v_accCount);
         DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
         DBMS_OUTPUT.PUT_LINE(v_accBal);
-        */
-
+        
         /*
         --**TEST** For Transaction Order
         DBMS_OUTPUT.PUT_LINE('-----------');
@@ -141,7 +143,7 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE(v_ntCount);
         */
 
-        DBMS_OUTPUT.PUT_LINE(v_ntCount);
+        --DBMS_OUTPUT.PUT_LINE(v_ntCount);
 
     END LOOP;
 
