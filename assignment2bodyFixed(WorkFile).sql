@@ -114,17 +114,19 @@ BEGIN
         SET Account_balance = v_accBal
         WHERE v_ntAccNo = v_accAccNo;
 
-        --==Check if Equal
+        --==Check if Equal**
 
         /*
         --==Update Transaction Detail
-        INSERT INTO TRANSACTION_DETAIL
-        VALUES(Account_no, Transaction_no, Transaction_type, Transaction_amount);
+        INSERT INTO TRANSACTION_DETAIL (Account_no, Transaction_no, Transaction_type, Transaction_amount)
+        VALUES(rec_ntData.Account_no, rec_ntData.Transaction_no, rec_ntData.Transaction_type, rec_ntData.Transaction_amount);
 
         --==Update Transaction History
-        INSERT INTO TRANSACTION_HISTORY
-        VALUES(Transaction_no, Transaction_date, Description);
+        INSERT INTO TRANSACTION_HISTORY (Transaction_no, Transaction_date, Description)
+        VALUES(rec_ntData.Transaction_no, rec_ntData.Transaction_date, rec_ntData.Description);
+        */
 
+        /*
         --==Delete Transaction History
         DELETE FROM NEW_TRANSACTIONS
         WHERE Transaction_no = v_ntTransNoTemp;
