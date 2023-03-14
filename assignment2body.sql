@@ -34,9 +34,11 @@ DECLARE
 
 --For Calculations
     v_accBal ACCOUNT.Account_balance%TYPE;
+    v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE;
 
 --Test Values
     v_accCount NUMBER(3) := 0;
+    v_ntCount NUMBER(3) := 0;
 
 --Exceptions
     ex_invalidAccNum_update EXCEPTION;
@@ -48,10 +50,11 @@ BEGIN
 
     FOR rec_accData IN cur_accData LOOP
         v_accBal := 0;
-
-        v_accCount := 0;--Test**
+        v_ntTransNoTemp := 0;
 
         FOR rec_ntData IN cur_ntData LOOP
+            v_accCount := 0;--Test**
+            v_ntCount := 0;--Test**
 
             SELECT Default_trans_type
             INTO v_atDefTransType
@@ -72,7 +75,8 @@ BEGIN
             END IF;
             */
 
-            --==Calculations
+            /*
+            --==Calculations 
             IF (rec_ntData.Account_no = rec_accData.Account_no) THEN
                 CASE
                     WHEN (v_atDefTransType = rec_ntData.Transaction_type) THEN
@@ -83,10 +87,21 @@ BEGIN
                 END CASE;
 
             END IF;
+            */
 
-            --**TEST**
+            /*
+            --**TEST** For Account Num Count
             IF (rec_ntData.Account_no = rec_accData.Account_no) THEN
                 v_accCount := v_accCount + 1;
+            END IF;
+            */
+
+            --**TEST**
+            IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
+                v_ntTransNoTemp := rec_ntData.Transaction_no;
+            ELSIF (v_ntTransNoTemp =  rec_ntData.Transaction_no) THEN
+                v_ntCount := v_ntCount +  1;
+            ELSE NULL;
             END IF;
 
         END LOOP;
@@ -103,12 +118,20 @@ BEGIN
         VALUES(Transaction_no, Transaction_date, Description);
         */
 
-        --**TEST**
+        /*
+        --**TEST** For Balance Calculations
         DBMS_OUTPUT.PUT_LINE('-----------');
+        DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
         DBMS_OUTPUT.PUT_LINE(rec_accData.Account_no);
         DBMS_OUTPUT.PUT_LINE(v_accCount);
         DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
         DBMS_OUTPUT.PUT_LINE(v_accBal);
+        */
+
+        --**TEST** For Transaction Order
+        DBMS_OUTPUT.PUT_LINE('-----------');
+        DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
+        DBMS_OUTPUT.PUT_LINE(v_ntCount);
         
     END LOOP;
 
