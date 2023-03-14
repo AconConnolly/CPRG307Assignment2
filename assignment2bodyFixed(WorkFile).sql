@@ -42,17 +42,32 @@ DECLARE
 
 BEGIN
     v_ntTransNoTemp := 0;
+    v_ntCount := 0;--Test**
 
     FOR rec_ntData IN cur_ntData LOOP
         v_ntAccNo := rec_ntData.Account_no;
         v_ntTransAmount := rec_ntData.Transaction_amount;
         v_ntTransType := rec_ntData.Transaction_type;
         v_accBal := 0;
-        v_ntCount := 0;--Test**
+
+        /*
+        --==Error Check 
+        IF SQL%NOTFOUND THEN --Invalid Account #
+            RAISE ex_invalidAccNum_update;
+        ELSIF (rec_ntData.Transaction_amount < 0) THEN --Negative Values
+            RAISE ex_nVal_update;
+        ELSIF (rec_ntData.Transaction_type = 'D' OR rec_transData.Transaction_type = 'C') THEN --Invalid Transaction Type
+            RAISE ex_invalidTransType_update;
+        ELSIF (rec_ntData.Transaction_no IS NULL) THEN --Missing Transaction Number
+            RAISE ex_missingTransNum_update;
+        ELSE NULL;
+        END IF;
+        */
 
         --**TEST**
         IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
             v_ntTransNoTemp := rec_ntData.Transaction_no;
+            v_ntCount := 0;--Test**
             DBMS_OUTPUT.PUT_LINE('-----------');--Test**
             DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);--Test*
         ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
@@ -66,20 +81,6 @@ BEGIN
             INTO v_atDefTransType
             FROM ACCOUNT_TYPE
             WHERE Account_type_code = rec_accData.Account_type_code;
-
-            /*
-            --==Error Check 
-            IF SQL%NOTFOUND THEN --Invalid Account #
-                RAISE ex_invalidAccNum_update;
-            ELSIF (rec_ntData.Transaction_amount < 0) THEN --Negative Values
-                RAISE ex_nVal_update;
-            ELSIF (rec_ntData.Transaction_type = 'D' OR rec_transData.Transaction_type = 'C') THEN --Invalid Transaction Type
-                RAISE ex_invalidTransType_update;
-            ELSIF (rec_ntData.Transaction_no IS NULL) THEN --Missing Transaction Number
-                RAISE ex_missingTransNum_update;
-            ELSE NULL;
-            END IF;
-            */
             
             --==Calculations 
             IF (v_ntAccNo = v_accAccNo) THEN
@@ -101,6 +102,8 @@ BEGIN
             */
                     
         END LOOP;
+
+        v_ntCount := v_ntCount + 1;--Test**
         
         ELSE NULL;
         END IF;
@@ -137,6 +140,8 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
         DBMS_OUTPUT.PUT_LINE(v_ntCount);
         */
+
+        DBMS_OUTPUT.PUT_LINE(v_ntCount);
 
     END LOOP;
 
