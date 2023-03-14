@@ -1,3 +1,7 @@
+SET LINESIZE 60
+SET PAGESIZE 66
+SET SERVEROUTPUT ON
+
 --==MainCode==--
 DECLARE
 
@@ -58,16 +62,11 @@ BEGIN
             v_ntTransNoTemp := rec_ntData.Transaction_no;
             DBMS_OUTPUT.PUT_LINE('-----------');
             DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
-            DBMS_OUTPUT.PUT_LINE(v_ntCount);
-
         ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
             v_ntCount := v_ntCount + 1;
-
         ELSE NULL;
         END IF;
         
-        DBMS_OUTPUT.PUT_LINE(v_ntCount);
-
         FOR rec_accData IN cur_accData LOOP
             v_accCount := 0;--Test**
 
@@ -111,6 +110,8 @@ BEGIN
             END IF;
             */
 
+            
+
         END LOOP;
 
         --==Check if Equal
@@ -123,6 +124,10 @@ BEGIN
         --==Update Transaction History
         INSERT INTO TRANSACTION_HISTORY
         VALUES(Transaction_no, Transaction_date, Description);
+
+        --==Delete Transaction History
+        DELETE FROM NEW_TRANSACTIONS
+        WHERE Transaction_no = v_ntTransNoTemp;
         */
 
         /*
@@ -141,6 +146,8 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
         DBMS_OUTPUT.PUT_LINE(v_ntCount);
         */  
+
+        DBMS_OUTPUT.PUT_LINE(v_ntCount);
         
     END LOOP;
 
