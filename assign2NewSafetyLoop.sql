@@ -67,7 +67,7 @@ DECLARE
     v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE; --The Default_trans_type in the ACCOUNT_ TABLE
     v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for tranaction number
     v_ntTransDate NEW_TRANSACTIONS.Transaction_date%TYPE; --A placeholder for tranaction date
-    v_errorStatus BOOLEAN := false; --Status for transaction group
+    v_errorStatus NUMBER(1) := 0; --Status for transaction group
     v_transaction_balanced number; --current transaction stuff
 
     --Exceptions
@@ -101,12 +101,12 @@ BEGIN
 				--Point beginign
                 IF (v_ntTransNoTemp != rec_ntData.Transaction_no) THEN
                     v_ntTransNoTemp := rec_ntData.Transaction_no;
-                    v_errorStatus := false;
+                    v_errorStatus := 0;
 
                 ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
-                    IF (v_errorStatus = true) THEN
+                    IF (v_errorStatus = 1) THEN
                         NULL;
-                    ELSIF (v_errorStatus != false) THEN
+                    ELSIF (v_errorStatus = 0) THEN
 
                         --Error checking
                         
