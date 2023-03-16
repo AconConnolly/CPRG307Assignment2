@@ -42,10 +42,36 @@ WHERE Account_type_code = v_accAccTypeCode;
 v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for tranaction number
 
 --Beg
+v_ntTransNoTemp := 0;
+
 IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
     v_ntTransNoTemp := rec_ntData.Transaction_no;
+    --Reset
+ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
+
+ELSE NULL;
+END IF;
+
+--End
+
+--==Checks if transaction no group has an error or not (Error checking)
+--Dec
+v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for tranaction number
+v_errorStatus BOOLEAN := false; --Status for transaction group
+
+--Beg
+v_ntTransNoTemp := 0;
+
+IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
+    v_ntTransNoTemp := rec_ntData.Transaction_no;
+    v_errorStatus := false;
 
 ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
+    IF (v_errorStatus = true) THEN
+        NULL;
+    ELSE NULL; --Calculations and updates
+
+    END IF;
 
 ELSE NULL;
 END IF;
