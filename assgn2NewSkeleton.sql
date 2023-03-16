@@ -37,6 +37,22 @@ WHERE Account_type_code = v_accAccTypeCode;
 
 --End
 
+--==Contains the rows to a transaction number (Groups the rows)
+--Dec
+v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for tranaction number
+
+--Beg
+IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
+    v_ntTransNoTemp := rec_ntData.Transaction_no;
+
+ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
+
+ELSE NULL;
+END IF;
+
+--End
+
+
 --==TestCode
 DECLARE
     --Constants
@@ -84,10 +100,12 @@ BEGIN
 
         END IF;
 
+        /*
         DBMS_OUTPUT.PUT_LINE('--------------');
         DBMS_OUTPUT.PUT_LINE(rec_ntData.Account_no);
         DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
         DBMS_OUTPUT.PUT_LINE(v_accAccBal);
+        */
 
     END LOOP;
 
