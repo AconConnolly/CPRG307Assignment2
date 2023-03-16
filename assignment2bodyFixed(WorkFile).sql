@@ -50,6 +50,8 @@ BEGIN
         v_ntTransType := rec_ntData.Transaction_type;
         v_accBal := 0;
 
+        
+
         /*
         --==Error Check 
         IF SQL%NOTFOUND THEN --Invalid Account #
@@ -68,8 +70,8 @@ BEGIN
         IF (v_ntTransNoTemp !=  rec_ntData.Transaction_no) THEN
             v_ntTransNoTemp := rec_ntData.Transaction_no;
             v_ntCount := 0;--Test**
-            --DBMS_OUTPUT.PUT_LINE('-----------');--Test**
-            --DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);--Test*
+            DBMS_OUTPUT.PUT_LINE('-----------');--Test**
+            DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);--Test*
         ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
         
         
@@ -132,12 +134,14 @@ BEGIN
         WHERE Transaction_no = v_ntTransNoTemp;
         */
         
+        /*
         --**TEST** For Balance Calculations
         DBMS_OUTPUT.PUT_LINE('-----------');
         DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp);
         DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
         DBMS_OUTPUT.PUT_LINE(v_accBal);
-        
+        */
+
         /*
         --**TEST** For Transaction Order
         DBMS_OUTPUT.PUT_LINE('-----------');
@@ -145,7 +149,7 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE(v_ntCount);
         */
 
-        --DBMS_OUTPUT.PUT_LINE(v_ntCount);
+        DBMS_OUTPUT.PUT_LINE(v_ntCount);
 
     END LOOP;
 
