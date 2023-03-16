@@ -71,11 +71,13 @@ BEGIN
             CASE
                 WHEN (v_atDefTransType = rec_ntData.Transaction_type) THEN
                     UPDATE ACCOUNT
-                    SET Account_balance = Account_balance + rec_ntData.Transaction_amount;
+                    SET Account_balance = Account_balance + rec_ntData.Transaction_amount
+                    WHERE Account_no = rec_ntData.Account_no;
 
                 WHEN (v_atDefTransType != rec_ntData.Transaction_type) THEN
                     UPDATE ACCOUNT
-                    SET Account_balance = Account_balance - rec_ntData.Transaction_amount;
+                    SET Account_balance = Account_balance - rec_ntData.Transaction_amount
+                    WHERE Account_no = rec_ntData.Account_no;
                     
                 ELSE NULL;
             END CASE;
@@ -85,6 +87,7 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE('--------------');
         DBMS_OUTPUT.PUT_LINE(rec_ntData.Account_no);
         DBMS_OUTPUT.PUT_LINE(v_atDefTransType);
+        DBMS_OUTPUT.PUT_LINE(v_accAccBal);
 
     END LOOP;
 
