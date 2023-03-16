@@ -1,229 +1,169 @@
---==preCode==--
-SET LINESIZE 155;
-SET PAGESIZE 66;
-SET SERVEROUTPUT ON;
+SET LINESIZE 60
+SET PAGESIZE 66
+SET SERVEROUTPUT ON
 
---Hard Code
+--==Constants
     k_tDebit CHAR(1) := 'D';
     k_tCredit CHAR(1) := 'C';
 
---Cursor
-    CURSOR cur_transData IS
+--==Exceptions
+	e_invalidAccNum EXCEPTION;
+	e_negative_amount EXCEPTION;
+	e_invalidTransType EXCEPTION;
+	e_missingTransNum EXCEPTION;
+	e_uneven_transaction_balance EXCEPTION;
+	
+--==NEW_TRANSACTIONS
+CURSOR cur_ntData IS
+SELECT *
+FROM NEW_TRANSACTIONS;
+
+--==Account
+Cursor c_account IS
+SELECT *
+FROM ACCOUNT;
+
+--==Get Account_no for Account_Bal (Where statement for update)
+--Dec
+v_accAccNo ACCOUNT.Account_no%TYPE; --The Account_no in the ACCOUNT TABLE 
+v_accAccTypeCode ACCOUNT.Account_type_code%TYPE; --The Account_type_code in the ACCOUNT TABLE
+v_accAccBal ACCOUNT.Account_balance%TYPE; --The Account_balance in the ACCOUNT TABLE
+
+--Beg
+SELECT Account_no, Account_type_code, Account_balance
+INTO v_accAccNo, v_accAccTypeCode, v_accAccBal
+FROM ACCOUNT
+WHERE Account_no = rec_ntData.Account_no;
+
+--End
+
+--==Get Default_trans_type for comparison (D or C)
+--Dec
+v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE; --The Default_trans_type in the ACCOUNT_ TABLE
+
+--Beg
+SELECT Default_trans_type
+INTO v_atDefTransType
+FROM ACCOUNT_TYPE
+WHERE Account_type_code = v_accAccTypeCode;
+
+--End
+
+--==TestCode
+DECLARE
+    --Constants
+    k_tDebit CHAR(1) := 'D';
+    k_tCredit CHAR(1) := 'C';
+
+    --Cursor
+    CURSOR cur_ntData IS
     SELECT *
     FROM NEW_TRANSACTIONS;
 
---Read Transaction number untell diffrent number 
+    --Variables
+    v_accAccNo ACCOUNT.Account_no%TYPE; --The Account_no in the ACCOUNT TABLE 
+    v_accAccTypeCode ACCOUNT.Account_type_code%TYPE; --The Account_type_code in the ACCOUNT TABLE
+    v_accAccBal ACCOUNT.Account_balance%TYPE; --The Account_balance in the ACCOUNT TABLE
+    v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE; --The Default_trans_type in the ACCOUNT_ TABLE
 
-loop tell %norowfound
---stuff = 1
---Select * from new_transactions where transaction_no = stuff + 2
+BEGIN
+	
+	begin
+	
+			FOR rec_ntData IN cur_ntData LOOP
 
-make varible 0 
-add amount if type = d
-subtract ammount if type = c 
+				SELECT Account_no, Account_type_code, Account_balance
+				INTO v_accAccNo, v_accAccTypeCode, v_accAccBal
+				FROM ACCOUNT
+				WHERE Account_no = rec_ntData.Account_no;
+				
+				SELECT Default_trans_type
+				INTO v_atDefTransType
+				FROM ACCOUNT_TYPE
+				WHERE Account_type_code = v_accAccTypeCode;
 
-if varible == 0 Contine
 
---**Miguel Stuff**
-    v_newTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE;
-    v_accBalTemp ACCOUNT.Account_balance%TYPE;
+				--Point beginign 
 
-    v_newTransNoTemp := 0;
-    v_accBalTemp := 0;
+				--Error checking
+				
+				if(rec_ntData.transcation_no is null) then 
+					raise e_negative_amount
+				end if;
+				
+				if(rec_ntData.transaction_amount <0) then 
+					raise e_negative_amount;
+				end if;
 
-    IF (v_newTransNoTemp != rec_transData.Transaction_no) THEN
-        v_newTransNoTemp := rec_transData.Transaction_no;
-        v_accBalTemp := 0;
+				if(rec_ntData.Transaction_type <> 'D' and rec_ntData.Transaction_type <> 'C')THEN
+					raise e_invalidTransType;
+				end if;
+				
+				if(rec_check.transaction_type = 'D') then 
+					v_transaction_balanced := v_transaction_balanced + rec_check.transaction_amount;
+				else 
+					v_transaction_balanced := v_transaction_balanced - rec_check.transaction_amount;
+				end if;
+				
+				
+				
+				
+				--Updateing
+				IF (rec_ntData.Account_no = v_accAccNo) THEN
+					CASE
+						WHEN (v_atDefTransType = rec_ntData.Transaction_type) THEN
+							UPDATE ACCOUNT
+							SET Account_balance = Account_balance + rec_ntData.Transaction_amount
+							WHERE Account_no = rec_ntData.Account_no;
 
-    ELSE
-        IF (rec_transData.Transaction_type = k_tDebit) THEN
-            v_accBalTemp := v_accBalTemp + rec_transData.Transaction_amount;
+						WHEN (v_atDefTransType != rec_ntData.Transaction_type) THEN
+							UPDATE ACCOUNT
+							SET Account_balance = Account_balance - rec_ntData.Transaction_amount
+							WHERE Account_no = rec_ntData.Account_no;
+							
+						ELSE NULL;
+					END CASE;
 
-        ELSIF (rec_transData.Transaction_type = k_tDebit) THEN
-            v_accBalTemp := v_accBalTemp - rec_transData.Transaction_amount;
-
-        ELSE NULL;
-        END IF;
-
-    END IF;
-
-    /*
-    UPDATE ACCOUNT
-    SET Account_balance = v_accBalTemp
-    WHERE 
-    */
-
---==EXCEPTIONS==--
-ex_invalidAccNum_update EXCEPTION;
-ex_nVal_update EXCEPTION;
-ex_invalidTransType_update EXCEPTION;
-ex_missingTransNum_update EXCEPTION;
-
---Invalid account #
-Check if account # exists 
-
---**Miguel Stuff**
-IF SQL%NOTFOUND THEN
-    RAISE ex_invalidAccNum_update;
-END IF;
-
-EXCEPTION
-
-WHEN ex_invalidAccNum_update THEN
-    RAISE_APPLICATION_ERROR(-20031, 'Account # does not exist');
-
+				END IF;
+				
+				--WHen a transaction isnt even, but im not sure where this would go 
+				if(v_transaction_balanced <> 0)then 
+					raise e_uneven_transaction_balance;
+				end if;
+				
+				
+				
+				--Point end 
+				
+			END LOOP;
+	EXCEPTION
+		--I dont think doing these as application errors is the best call 
+		--as it will terminat the program 
+		--Stuff can also be added to the error table 
+			
+			WHEN e_invalidAccNum THEN
+				insert (rec_check.transaction_no, sysdate, "Account # does not exist", "invalidAccNum")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20031, 'Account # does not exist');
+			WHEN e_negative_amount THEN
+				insert (rec_check.transaction_no, sysdate, "Negative values are invalid", "negativeAmount")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20032, 'Negative values are invalid');
+			WHEN e_invalidTransType THEN
+				insert (rec_check.transaction_no, sysdate, "Invalid trasaction type", "invalidTransType")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20033, 'Invalid trasaction type');
+			WHEN e_missingTransNum THEN
+				insert (null, sysdate, "Missing transaction number", "missingTransNum")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20034, 'Missing transaction number');
+			WHEN e_uneven_transaction_balance then 
+				insert (rec_check.transaction_no, sysdate, "The Transaction Doesn't balance", "unevenTransBal")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20035, 'The Transaction Doesnt balance');
+			WHEN others then 
+				DBMS_OUTPUT.PUT_LINE('Some other error occured');
+			
+	END;
 END;
-
---Negative values given for transaction 
-Check if any values are negative
-
---**Miguel Stuff**
-IF (rec_transData.Transaction_amount < 0) THEN
-    RAISE ex_nVal_update;
-END IF;
-
-EXCEPTION
-
-WHEN ex_nVal_update THEN
-    RAISE_APPLICATION_ERROR(-20032, 'Negative values are invalid');
-
-END;
-
---Invalid transcation type
-Compare to make sure it D or C
-
---**Miguel Stuff**
-IF (rec_transData.Transaction_type = 'D' OR rec_transData.Transaction_type = 'C') THEN
-    RAISE ex_invalidTransType_update;
-END IF;
-
-EXCEPTION
-
-WHEN ex_invalidTransType_update THEN
-    RAISE_APPLICATION_ERROR(-20033, 'Invalid trasaction type');
-
-END;
-
---missin transaction number
-if Transaction number is null
-
---**Miguel Stuff**
-IF (rec_transData.Transaction_no IS NULL) THEN
-    RAISE ex_missingTransNum_update;
-END IF;
-
-EXCEPTION
-
-WHEN ex_missingTransNum_update THEN
-    RAISE_APPLICATION_ERROR(-20034, 'Missing transaction number');
-
-END;
-
---Get defaut transaction type from row
---Match account_no.new_transactions to account_no.accunt
---get account_no.accunt account_type_code
---Match account_type_code.account to account_type_code.accoun_type
---get default_trans_type 
---Compare default_trans_type.account_type to transaction_type.new_transactions
-if they are the same add amount to account 
-if they are diffrent subtract amount from account 
-
---**Miguel Stuff**
-    v_newTransTypeTemp NEW_TRANSACTIONS.Transaction_type%TYPE;
-    v_newAccNoTemp NEW_TRANSACTIONS.Account_no%TYPE;
-    v_accTypeCodeTemp ACCOUNT_TYPE.Account_type_code%TYPE;
-    v_accBalTemp ACCOUNT.Account_balance%TYPE;
-
-    v_newTransTypeTemp := '';
-    v_newAccNoTemp := 0;
-    v_accTypeCodeTemp := '';
-    v_accBalTemp := 0;
-
-    FOR rec_transData IN cur_transData LOOP
-        v_newTransTypeTemp := rec_transData.Transaction_type;
-        v_newAccNoTemp := rec_transData.Account_no;
-
-        SELECT Default_trans_type
-        FROM ACCOUNT_TYPE
-        JOIN ACCOUNT USING (ACCOUNT_TYPE_CODE)
-        WHERE Account_no = v_newAccNoTemp;
-
-        IF (v_newTransTypeTemp = Default_trans_type) THEN
-            v_accBalTemp := v_accBalTemp + rec_transData.Transaction_amount;
-        ELSIF (v_newTransTypeTemp != Default_trans_type) THEN
-            v_accBalTemp := v_accBalTemp - rec_transData.Transaction_amount;
-        ELSE NULL;
-        END IF;
-
-        /*
-        UPDATE ACCOUNT
-        SET Account_balance = v_accBalTemp
-        WHERE 
-        */
-
-    END LOOP;
-
---Add to transaction_detail and transaction_history
-
---**Miguel Stuff**
-Make New stuff
-
--- TRANSACTION_DETAIL
-FOR rec_transData IN cur_transData LOOP
-        
-    INSERT INTO TRANSACTION_DETAIL
-    VALUES(Account_no, Transaction_no, Transaction_type, Transaction_amount);
-
-END LOOP;
-
--- TRANSACTION_HISTORY
-FOR rec_transData IN cur_transData LOOP
-        
-    INSERT INTO TRANSACTION_HISTORY
-    VALUES(Transaction_no, Transaction_date, Description);
-
-END LOOP;
-
---Delete transaction from new_transactions table 
-
---**Miguel Stuff**
-Delete Stuff
-
-DELETE FROM NEW_TRANSACTIONS;
-
---Finding Acc Type
-
-
-
-
-
-
-
-
-
-
---Getting Account Type's Debit or Credit (Case decision)
-    v_accTypeDC ACCOUNT.ACCOUNT_TYPE_CODE%TYPE;
-
-    CASE
-        WHEN () THEN
-            v_accTypeDC := D;
-
-        WHEN () THEN
-            v_accTypeDC := c;
-
-        ELSE NULL;
-
-    END CASE;
-
---Compare Debit and Credit if Equal
-
-
---Compare NewTrans and Account type (Case decision)
-    IF (rec_transData.transaction_type = ) THEN --ADD
-
-    ELSE () --SUBTRACT
-
-    END IF;
-
---==EXCEPTIONS==--
+/
