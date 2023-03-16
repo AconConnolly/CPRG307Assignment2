@@ -16,12 +16,18 @@ DECLARE
     SELECT *
     FROM NEW_TRANSACTIONS;
 	
+	Cursor c_detail IS
+	SELECT *
+	FROM TRANSACTION_DETAIL;
+	
 rec_check c_check%ROWTYPE;
+rec_detail c_detail%ROWTYPE;
 	
 --Variables 
 	v_current_trans number;
 	v_transaction_balanced number := 0;
-	-- Exceptions
+	v_exists boolean;
+-- Exceptions
 	e_invalidAccNum EXCEPTION;
 	e_negative_amount EXCEPTION;
 	e_invalidTransType EXCEPTION;
@@ -49,24 +55,28 @@ begin
 			loop
 				fetch c_check into rec_check;
 				v_transaction_balanced := 0;
-				
+				v_exists = false;
 				if(rec_check.transaction_no is null) then 
 					raise e_missingTransNum;
 				end if;
 				
-				exit when (rec_check.transaction_no <> v_current_trans) or (c_check%NOTFOUND);
+				--exit when (rec_check.transaction_no <> v_current_trans) or (c_check%NOTFOUND);
 				
-				/* had to comment this out to check the rest 
-				if(rec_check.account_no ) then --Somehow neex to check if this account number exits 
+				LOOP
+					fetch c_detail into rec_detail;
+					if(rec_check.account_no = rec_detail.account_no) then
+						v_exists = true;
+					end if;
+				end loop;
+				if(v_exists = false) then
 					raise e_invalidAccNum;
 				end if;
-				*/
 				
-				if(rec_check.transaction_amount <0) then 
+				if(rec_check.transaction_amount < 0) then 
 					raise e_negative_amount;
 				end if;
 				
-				if(rec_check.transaction_type <> 'D' and rec_check.transaction_type <> 'C')THEN
+				if(rec_check.transaction_type <> 'D' and rec_check.transaction_type <> 'C') THEN
 					raise e_invalidTransType;
 				end if;
 				
@@ -88,15 +98,25 @@ begin
 		--Stuff can also be added to the error table 
 			
 			WHEN e_invalidAccNum THEN
-				RAISE_APPLICATION_ERROR(-20031, 'Account # does not exist');
+				insert (rec_check.transaction_no, sysdate, "Account # does not exist", "invalidAccNum")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20031, 'Account # does not exist');
 			WHEN e_negative_amount THEN
-				RAISE_APPLICATION_ERROR(-20032, 'Negative values are invalid');
+				insert (rec_check.transaction_no, sysdate, "Negative values are invalid", "negativeAmount")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20032, 'Negative values are invalid');
 			WHEN e_invalidTransType THEN
-				RAISE_APPLICATION_ERROR(-20033, 'Invalid trasaction type');
+				insert (rec_check.transaction_no, sysdate, "Invalid trasaction type", "invalidTransType")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20033, 'Invalid trasaction type');
 			WHEN e_missingTransNum THEN
-				RAISE_APPLICATION_ERROR(-20034, 'Missing transaction number');
+				insert (null, sysdate, "Missing transaction number", "missingTransNum")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20034, 'Missing transaction number');
 			WHEN e_uneven_transaction_balance then 
-				RAISE_APPLICATION_ERROR(-20035, 'The Transaction Dosnt blance');
+				insert (rec_check.transaction_no, sysdate, "The Transaction Doesn't balance", "unevenTransBal")
+				into wkis_error_log;
+				--RAISE_APPLICATION_ERROR(-20035, 'The Transaction Doesnt balance');
 			WHEN others then 
 				DBMS_OUTPUT.PUT_LINE('Some other error occured');
 			
@@ -116,5 +136,5 @@ begin
 		--commit;	 --Not sure if this should go here 
 	END loop;
 
-end;
+END;
 /
