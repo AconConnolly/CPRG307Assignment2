@@ -79,10 +79,10 @@ DECLARE
 
 BEGIN
 
+    v_errorStatus := 0;
     v_ntTransNoTemp := 0;
-
-	begin
-
+    
+	BEGIN
 	
 			FOR rec_ntData IN cur_ntData LOOP
 
@@ -97,38 +97,36 @@ BEGIN
 				WHERE Account_type_code = v_accAccTypeCode;
 
                 v_ntTransDate := rec_ntData.Transaction_date;
+                v_ntTransNoTemp := rec_ntData.Transaction_no;
 
-				--Point beginign
-                IF (v_ntTransNoTemp != rec_ntData.Transaction_no) THEN
-                    v_ntTransNoTemp := rec_ntData.Transaction_no;
-                    v_errorStatus := 0;
-
-                ELSIF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
-                    IF (v_errorStatus = 1) THEN
-                        NULL;
-                    ELSIF (v_errorStatus = 0) THEN
-
-                        --Error checking
+				--Point Beginning
+                IF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
+                    
+                    --Error Checking
+                    IF (v_errorStatus = 0) THEN
                         
-                        if(rec_ntData.transaction_no is null) then 
+                        IF(rec_ntData.Transaction_no is null) THEN 
                             raise e_negative_amount;
-                        end if;
+                            v_errorStatus := 1;
+                        END IF;
                         
-                        if(rec_ntData.transaction_amount <0) then 
+                        IF(rec_ntData.Transaction_amount <0) THEN 
                             raise e_negative_amount;
-                        end if;
+                            v_errorStatus := 1;
+                        END IF;
 
-                        if(rec_ntData.Transaction_type <> 'D' and rec_ntData.Transaction_type <> 'C')THEN
+                        IF(rec_ntData.Transaction_type <> 'D' and rec_ntData.Transaction_type <> 'C')THEN
                             raise e_invalidTransType;
-                        end if;
+                            v_errorStatus := 1;
+                        END IF;
                         
-                        if(rec_ntData.transaction_type = 'D') then 
+                        IF(rec_ntData.Transaction_type = 'D') THEN 
                             v_transaction_balanced := v_transaction_balanced + rec_ntData.transaction_amount;
-                        else 
+                        ELSE 
                             v_transaction_balanced := v_transaction_balanced - rec_ntData.transaction_amount;
-                        end if;
+                        END IF;
                         
-                        --Updateing
+                        --Updating
                         IF (rec_ntData.Account_no = v_accAccNo) THEN
                             CASE
                                 WHEN (v_atDefTransType = rec_ntData.Transaction_type) THEN
@@ -146,22 +144,26 @@ BEGIN
 
                         END IF;
                         
-                        --WHen a transaction isnt even, but im not sure where this would go 
-                        if(v_transaction_balanced <> 0)then 
+                        --When a transaction isn't even, but im not sure where this would go 
+                        IF(v_transaction_balanced <> 0) THEN
                             raise e_uneven_transaction_balance;
-                        end if;
-                        
+                        END IF;
+
                     ELSE NULL;
                     END IF;
 
+                ELSIF (v_ntTransNoTemp != rec_ntData.Transaction_no) THEN
+                    v_errorStatus := 0;
+
                 ELSE NULL;
                 END IF;
-				--Point end 
+				--Point End 
 				
 			END LOOP;
+            
 	EXCEPTION
-		--I dont think doing these as application errors is the best call 
-		--as it will terminat the program 
+		--I don't think doing these as application errors is the best call 
+		--as it will terminate the program 
 		--Stuff can also be added to the error table 
 			
 			WHEN e_invalidAccNum THEN
@@ -180,11 +182,11 @@ BEGIN
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(null, v_ntTransDate, 'Missing transaction number', 'missingTransNum');
 				--RAISE_APPLICATION_ERROR(-20034, 'Missing transaction number');
-			WHEN e_uneven_transaction_balance then 
+			WHEN e_uneven_transaction_balance THEN 
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(v_ntTransNoTemp, v_ntTransDate, 'The Transaction Doesnt balance', 'unevenTransBal');
 				--RAISE_APPLICATION_ERROR(-20035, 'The Transaction Doesnt balance');
-			WHEN others then 
+			WHEN others THEN 
 				DBMS_OUTPUT.PUT_LINE('Some other error occured');
 			
 	END;
