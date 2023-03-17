@@ -18,12 +18,15 @@ DECLARE
     v_accAccNo ACCOUNT.Account_no%TYPE; --The Account_no in the ACCOUNT TABLE 
     v_accAccTypeCode ACCOUNT.Account_type_code%TYPE; --The Account_type_code in the ACCOUNT TABLE
     v_accAccBal ACCOUNT.Account_balance%TYPE; --The Account_balance in the ACCOUNT TABLE
-    v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE; --The Default_trans_type in the ACCOUNT_ TABLE
-    v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for tranaction number
-    v_ntTransDate NEW_TRANSACTIONS.Transaction_date%TYPE; --A placeholder for tranaction date
+    v_atDefTransType ACCOUNT_TYPE.Default_trans_type%TYPE; --The Default_trans_type in the ACCOUNT TABLE
+    v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for transaction number
+    v_ntTransDate NEW_TRANSACTIONS.Transaction_date%TYPE; --A placeholder for transaction date
     v_errorStatus NUMBER(1) := 0; --Status for transaction group
     v_transaction_balanced number; --current transaction stuff
-	v_exists number := 0; --Used to check if the account number in a transaction existst
+    v_transDesc NEW_TRANSACTIONS.Description%TYPE; --The Description of the transaction
+    v_transType NEW_TRANSACTIONS.Transaction_type%TYPE; --The transaction type of the new transaction
+    v_transAmount NEW_TRANSACTIONS.Transaction_amount%TYPE; --The size of the transaction
+	v_exists number := 0; --Used to check if the account number in a transaction exists
 
     --Exceptions
     e_invalidAccNum EXCEPTION;
@@ -131,6 +134,14 @@ BEGIN
                 --ELSE NULL;
                 --END IF;
 				--Point end 
+			
+			insert into transaction_history (transaction_no, transaction_date, description)
+			values (v_ntTransNoTemp, v_ntTransDate, v_transDesc);
+
+			insert into transaction_detail (Account_no, transaction_no, transaction_type, transaction_amount)
+			values (v_accAccNo, v_ntTransNoTemp, v_transType, v_transAmount);
+			
+			delete from new_transactions where transaction_no = v_ntTransNoTemp; --deletes all transactions of the same number
 				
 			END LOOP;
 			--There will have to be a commit here
