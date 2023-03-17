@@ -129,7 +129,14 @@ BEGIN
                     END IF;
 				
                 ELSIF (v_ntTransNoTemp != rec_ntData.Transaction_no) THEN
-                    v_errorStatus := 0;
+                    IF (v_errorStatus = 1) THEN
+                        v_errorStatus := 0;
+
+                    ELSE  
+                        NULL;
+                        --COMMIT;
+
+                    END IF;
 
                 ELSE NULL;
                 END IF;
@@ -149,7 +156,7 @@ BEGIN
 			insert into transaction_detail (Account_no, transaction_no, transaction_type, transaction_amount)
 			values (v_accAccNo, v_ntTransNoTemp, v_transType, v_transAmount);
 			
-			delete from new_transactions where transaction_no = v_ntTransNoTemp; --deletes all transactions of the same number
+			--delete from new_transactions where transaction_no = v_ntTransNoTemp; --deletes all transactions of the same number
 				
 			END LOOP;
             
