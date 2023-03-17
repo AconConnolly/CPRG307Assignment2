@@ -13,7 +13,6 @@ DECLARE
 		SELECT *
 	FROM ACCOUNT;
 
-
     --Variables
     v_accAccNo ACCOUNT.Account_no%TYPE; --The Account_no in the ACCOUNT TABLE 
     v_accAccTypeCode ACCOUNT.Account_type_code%TYPE; --The Account_type_code in the ACCOUNT TABLE
@@ -22,12 +21,13 @@ DECLARE
     v_ntTransNoTemp NEW_TRANSACTIONS.Transaction_no%TYPE; --A placeholder for tranaction number
     v_ntTransDate NEW_TRANSACTIONS.Transaction_date%TYPE; --A placeholder for tranaction date
     v_errorStatus NUMBER(1) := 0; --Status for transaction group
-    v_transaction_balanced number; --current transaction stuff
+    v_transaction_balanced NUMBER; --current transaction stuff
 	v_transDesc NEW_TRANSACTIONS.Description%TYPE; --The Description of the transaction
     v_transType NEW_TRANSACTIONS.Transaction_type%TYPE; --The transaction type of the new transaction
     v_transAmount NEW_TRANSACTIONS.Transaction_amount%TYPE; --The size of the transaction
 	v_count INTEGER; --For making sure the transaction number is UNIQUE
 	v_exists number := 0; --Used to check if the account number in a transaction exists
+
     --Exceptions
     e_invalidAccNum EXCEPTION;
 	e_negative_amount EXCEPTION;
@@ -79,7 +79,7 @@ BEGIN
                     
                     --Error Checking
                     IF (v_errorStatus = 0) THEN
-                        
+
                         IF(rec_ntData.Transaction_no is null) THEN 
                             v_errorStatus := 1;
 							raise e_negative_amount;
@@ -101,6 +101,7 @@ BEGIN
                             v_transaction_balanced := v_transaction_balanced - rec_ntData.transaction_amount;
                         END IF;
                         
+                        
                         --Updating
                         IF (rec_ntData.Account_no = v_accAccNo) THEN
                             CASE
@@ -119,13 +120,15 @@ BEGIN
 
                         END IF;
                         
+                        
                         --When a transaction isn't even, but im not sure where this would go 
 						--DBMS_OUTPUT.PUT_LINE(v_transaction_balanced || 'hello how are you today');
                         IF(v_transaction_balanced <> 0) THEN
                             raise e_uneven_transaction_balance;
                         END IF;
-
+                        
                     ELSE NULL;
+
                     END IF;
 				
                 ELSIF (v_ntTransNoTemp != rec_ntData.Transaction_no) THEN
