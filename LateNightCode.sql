@@ -42,9 +42,9 @@ DECLARE
 
 BEGIN
 
-    v_errorStatus := 0;
     v_ntTransNoTemp := 0;
     FOR rec_ntData IN cur_ntData LOOP
+    v_errorStatus := 0;
 	BEGIN
 	
 			DBMS_OUTPUT.PUT_LINE(' '|| rec_ntData.transaction_no ||' '|| rec_ntData.account_no ||' '||rec_ntData.Transaction_amount||' '|| rec_ntData.Transaction_type);
