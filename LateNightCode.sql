@@ -42,9 +42,9 @@ DECLARE
 
 BEGIN
 
+    v_errorStatus := 0;
     v_ntTransNoTemp := 0;
     FOR rec_ntData IN cur_ntData LOOP
-    v_errorStatus := 0;
 	BEGIN
 	
 			DBMS_OUTPUT.PUT_LINE(' '|| rec_ntData.transaction_no ||' '|| rec_ntData.account_no ||' '||rec_ntData.Transaction_amount||' '|| rec_ntData.Transaction_type);
@@ -66,7 +66,7 @@ BEGIN
 					raise e_invalidAccNum;
 				end if;
 
-				--DBMS_OUTPUT.PUT_LINE(rec_ntData.Account_no);
+				--DBMS_OUTPUT.PUT_LINE('stuff and stuff');
 				SELECT Account_no, Account_type_code, Account_balance
 				INTO v_accAccNo, v_accAccTypeCode, v_accAccBal
 				FROM ACCOUNT
@@ -89,25 +89,38 @@ BEGIN
 					v_ntTransNoTemp := v_currentNo;
 				end if;
 
+				--DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp || ' ' || rec_ntData.Transaction_no);
 				IF (v_ntTransNoTemp != rec_ntData.Transaction_no) THEN
 		
-						DBMS_OUTPUT.PUT_LINE('hello how are you today');
-                IF(v_transaction_balanced <> 0) THEN
-					--rollback;
-                    raise e_uneven_transaction_balance;
-                END IF;
+						--DBMS_OUTPUT.PUT_LINE('hello how are you today');
+				
+					IF(v_transaction_balanced <> 0) THEN
+						--rollback;
+						raise e_uneven_transaction_balance;
+					END IF;
+				end if;
+				
 				
 				
 				
 				
 				
 				--Point Beginning
+				--DBMS_OUTPUT.PUT_LINE(v_ntTransNoTemp || ' ' || rec_ntData.Transaction_no);
                 IF (v_ntTransNoTemp = rec_ntData.Transaction_no) THEN
                     v_currentNo := rec_ntData.Transaction_no;
 					
-                    --Error Checking
-                    --IF (v_errorStatus = 0) THEN
+                    
                         
+                    
+
+                    --END IF;
+				end if;					--DBMS_OUTPUT.PUT_LINE('Why this no work');
+						
+				--COMMIT;
+				--Error Checking
+                    --IF (v_errorStatus = 0) THEN
+                        --DBMS_OUTPUT.PUT_LINE('stuff and stuff');
                         IF(rec_ntData.Transaction_amount <0) THEN 
                             --rollback;
 							DBMS_OUTPUT.PUT_LINE('Transaction Ammount');
@@ -147,24 +160,9 @@ BEGIN
                             END CASE;
 
                         END IF;
-                        
-                    
 
-                    --END IF;
-				end if;					--DBMS_OUTPUT.PUT_LINE('Why this no work');
-						
-				--COMMIT;
-                    IF (v_errorStatus = 1) THEN
-                        v_errorStatus := 0;
-
-                    ELSE  
-                        NULL;
-                        
-
-                    END IF;
-
-                ELSE NULL;
-                END IF;
+                --ELSE NULL;
+                --END IF;
 				--Point End 
 			
 			--Everything below this is for adding to the table and stuff		
@@ -184,8 +182,7 @@ BEGIN
 				
 				insert into transaction_detail (Account_no, transaction_no, transaction_type, transaction_amount)
 				values (v_accAccNo, v_usedForUpdate, v_transType, v_transAmount);
-			ELSE
-				null;
+			
 			END IF;
 
 			
@@ -201,22 +198,27 @@ BEGIN
 		--as it will terminate the program 
 		--Stuff can also be added to the error table 
 			WHEN e_invalidAccNum THEN
+				rollback;
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(v_ntTransNoTemp, v_ntTransDate, 'Account # does not exist', 'invalidAccNum');
 				v_errorStatus := 0;
 			WHEN e_negative_amount THEN
+				rollback;
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(v_ntTransNoTemp, v_ntTransDate, 'Negative values are invalid', 'negativeAmount');
 				v_errorStatus := 0;
 			WHEN e_invalidTransType THEN
+				rollback;
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(v_ntTransNoTemp, v_ntTransDate, 'Invalid trasaction type', 'invalidTransType');
 				v_errorStatus := 0;
 			WHEN e_missingTransNum THEN
+				rollback;
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(null, v_ntTransDate, 'Missing transaction number', 'missingTransNum');
 				v_errorStatus := 0;
 			WHEN e_uneven_transaction_balance THEN 
+				rollback;
 				insert into wkis_error_log (TRANSACTION_NO, TRANSACTION_DATE, DESCRIPTION, ERROR_MSG) 
 				values(v_ntTransNoTemp, v_ntTransDate, 'The Transaction Doesnt balance', 'unevenTransBal');
 				v_errorStatus := 0;
@@ -224,6 +226,7 @@ BEGIN
 			--	DBMS_OUTPUT.PUT_LINE('Some other error occured');
 			
 	END;
+	commit;
 	END LOOP;
 END;
 /
